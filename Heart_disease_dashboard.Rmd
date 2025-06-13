@@ -1,0 +1,121 @@
+---
+title: "HEART DISEASE DASHBOARD"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(plotly)
+library(janitor)
+library(magick)
+library(knitr)
+
+heart <- read.csv("C:/Users/ADMIN/Downloads/heart.csv")
+view(heart)
+```
+
+Column {data-width=150}
+-----------------------------------------------------------------------
+
+### ![](resized_image.jpeg)
+
+```{r, echo=FALSE, results='asis'}
+library(magick)
+img <- image_read("C:/Users/ADMIN/Downloads/download.jpeg")
+img_resized <- image_resize(img, "x100")
+image_write(img_resized, "resized_image.jpeg") 
+knitr::include_graphics("resized_image.jpeg")
+```
+
+
+### Average Age
+
+```{r}
+valueBox(round(mean(heart$Age), 1), caption = "Average Age", color = "#6A5ACD")
+```
+
+###  % Heart Disease
+
+```{r}
+percent_hd <- round(mean(heart$HeartDisease) * 100, 1)
+valueBox(paste0(percent_hd, "%"), caption = "Heart Disease Rate", color = "#DC143C")
+```
+
+### Average Cholesterol
+
+```{r} 
+valueBox(round(mean(heart$Cholesterol), 1), caption = "Avg Cholesterol", color = "#DAA520")
+
+```
+
+### Total Records
+
+```{r}
+valueBox(nrow(heart), caption = "Total Records", color = "#4682B4")
+```
+
+Column {data-width=600}
+-----------------------------------------------------------------------
+
+### 
+
+```{r}
+cp_data <- heart %>%
+  count(ChestPainType)
+
+plot_ly(cp_data,
+        x = ~ChestPainType,
+        y = ~n,
+        type = 'bar',
+        marker = list(color = '#008080')) %>%
+  layout(
+    title = "Distribution of Chest Pain Types",
+    xaxis = list(title = "Chest Pain Type"),
+    yaxis = list(title = "Count")
+  )
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### HEART DISEASE COUNT BY SEX
+
+```{r}
+sex_counts <- heart %>%
+  mutate(Sex = factor(Sex, labels = c("Female", "Male"))) %>%
+  count(Sex)
+
+plot_ly(sex_counts,
+        labels = ~Sex,
+        values = ~n,
+        type = 'pie',
+        marker = list(colors = c('#008080', '#DC143C'))) %>%
+  layout(title = "Heart Disease by Sex",
+         margin = list(b = 20))
+
+```
+
+### AGE VS. CHOLESTEROL BY HEART DISEASE
+
+```{r}
+heart_disease_by_age <- heart %>%
+  group_by(Age) %>%
+  summarise(Avg_HeartDisease = mean(HeartDisease, na.rm = TRUE))
+plot_ly(data = heart_disease_by_age,
+        x = ~Age,
+        y = ~Avg_HeartDisease,
+        type = 'scatter',
+        mode = 'lines',
+        line = list(color = 'darkred')) %>%
+  layout(
+    title = "Average Heart Disease by Age",
+    xaxis = list(title = "Age"),
+    yaxis = list(title = "Average Heart Disease Rate (0 to 1)")
+  )
+```
